@@ -1,0 +1,501 @@
+/* Teacher-led note: a sheet the teacher writes on, pausing for the learner */
+:root {
+  --sheet: #fffaf1;
+  --sheet-rule: #ece2d0;
+  --sheet-edge: #e2d6c1;
+  --ink-soft: #3d3831;
+  /* The learner's own words are written in a blue-black ink, apart from the teacher's. */
+  --pen-ink: #2c4a66;
+  --mark: #f6e7b8;
+}
+
+/* Mode switch in both sidebars */
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin: 4px 16px 10px;
+  padding: 3px;
+  background: var(--side-track);
+  border-radius: 9px;
+}
+.mode-switch button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--side-muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.mode-switch button.active {
+  background: var(--ink);
+  color: var(--on-ink);
+  cursor: default;
+}
+
+.note-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: 40vh;
+}
+.note-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 12px max(24px, calc((100% - 760px) / 2)) 10px;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+.note-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.speed {
+  display: flex;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.speed button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.speed button + button {
+  border-left: 1px solid var(--rule);
+}
+.speed button.active {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.stop-dots {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.stop-dots li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stop-dots li > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1.2px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+}
+.stop-dots li.done {
+  color: var(--pen);
+}
+.stop-dots li.done > span:first-child {
+  background: var(--pen);
+  border-color: var(--pen);
+  color: var(--on-ink);
+}
+.stop-dots li.now {
+  color: var(--ink);
+  font-weight: 600;
+}
+.stop-dots li.now > span:first-child {
+  box-shadow: 0 0 0 3px var(--mark);
+  background: var(--mark);
+}
+
+/* The sheet */
+.note-doc {
+  position: relative;
+  width: min(760px, 100% - 48px);
+  margin: 28px auto 0;
+  padding: 36px 56px 44px;
+  background: var(--sheet);
+  border: 1px solid var(--sheet-edge);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 0 var(--sheet-edge),
+    0 14px 40px -18px rgba(45, 41, 36, 0.22);
+  font-family: var(--song);
+  font-size: 1.04rem;
+  line-height: 2;
+  color: var(--ink-soft);
+}
+.note-doc.is-typing {
+  cursor: pointer;
+}
+.note-doc::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 34px;
+  border-left: 1px solid #f0d6d2;
+}
+.note-text :is(h2, h3) {
+  margin: 1.2em 0 0.4em;
+  font-size: 1.28rem;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.note-text > :first-child {
+  margin-top: 0;
+}
+.note-text p {
+  margin: 0 0 0.8em;
+}
+.note-text strong {
+  color: var(--ink);
+  background: linear-gradient(transparent 62%, var(--mark) 62%);
+}
+.note-text mjx-container[display='true'] {
+  margin: 0.6em 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.tw-pending {
+  display: none !important;
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.15em;
+  margin-left: 1px;
+  vertical-align: -0.18em;
+  background: var(--ink);
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+.is-typing .caret {
+  animation: none;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* The bubble that grows out of the pen */
+.stop-bubble {
+  --tail-x: 28px;
+  position: relative;
+  margin: 16px -20px 22px;
+  padding: 14px 18px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--pen);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -20px rgba(128, 57, 69, 0.45);
+  font-family: 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.7;
+  transform-origin: var(--tail-x) -12px;
+  animation: bubble-grow 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
+.stop-bubble.closing {
+  animation: bubble-shrink 0.32s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+@keyframes bubble-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.08);
+  }
+}
+@keyframes bubble-shrink {
+  to {
+    opacity: 0;
+    transform: scale(0.06);
+  }
+}
+.stop-tail {
+  position: absolute;
+  top: -8px;
+  left: calc(var(--tail-x) - 7px);
+  width: 14px;
+  height: 14px;
+  background: var(--surface);
+  border-top: 1.5px solid var(--pen);
+  border-left: 1.5px solid var(--pen);
+  transform: rotate(45deg);
+}
+.stop-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.stop-kind {
+  padding: 0 8px;
+  border-radius: 10px;
+  background: var(--pen-pale);
+  color: var(--pen);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.7;
+}
+.stop-kind.kind-derive {
+  background: #e4ede5;
+  color: var(--green);
+}
+.stop-kind.kind-contrast {
+  background: #f4e7d2;
+  color: var(--brass-dark);
+}
+.stop-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+.stop-count {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.stop-ask {
+  font-family: var(--song);
+  font-size: 1.04rem;
+  color: var(--ink);
+}
+.stop-ask p {
+  margin: 0;
+}
+.stop-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px dashed var(--rule);
+  list-style: none;
+}
+.stop-thread li {
+  max-width: 88%;
+  padding: 6px 12px;
+  border-radius: 10px;
+}
+.stop-thread p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.stop-thread .turn-me {
+  align-self: flex-end;
+  background: var(--pen-pale);
+  color: var(--pen-ink);
+}
+.stop-thread .turn-teacher {
+  align-self: flex-start;
+  background: #f3ecdf;
+  color: var(--muted);
+}
+.stop-thread .turn-teacher.latest {
+  background: var(--mark);
+  color: var(--ink);
+}
+.turn-who {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.stop-wait {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+.dots::after {
+  content: '…';
+  display: inline-block;
+  animation: caret-blink 1s steps(1) infinite;
+}
+.stop-prompt {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.stop-bubble textarea {
+  display: block;
+  min-height: 72px;
+  resize: vertical;
+  line-height: 24px;
+  color: var(--pen-ink);
+}
+.stop-preview {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  border-left: 2px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+}
+.stop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.stop-keys {
+  margin-right: auto;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.stop-bubble .coach-error {
+  margin: 8px 0 0;
+}
+
+/* The learner's own words, written into the note */
+.note-answer {
+  margin: 4px 0 20px;
+  padding: 8px 16px 8px 18px;
+  border-left: 3px solid var(--pen);
+  background: rgba(230, 235, 247, 0.45);
+  animation: answer-ink 0.5s ease-out both;
+}
+@keyframes answer-ink {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.note-answer figcaption {
+  font-family: 'PingFang SC', 'Noto Sans CJK SC', system-ui, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--pen);
+}
+.note-answer > p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: 'Kaiti SC', 'STKaiti', 'KaiTi', var(--song);
+  font-size: 1.08rem;
+  color: var(--pen-ink);
+}
+.answer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  font-family: 'PingFang SC', 'Noto Sans CJK SC', system-ui, sans-serif;
+  font-size: 0.74rem;
+  color: var(--muted);
+  line-height: 2;
+}
+.answer-meta a {
+  text-decoration: none;
+}
+.answer-ref {
+  margin: 4px 0 4px;
+  padding: 6px 12px;
+  border: 1px dashed var(--rule);
+  border-radius: 6px;
+  background: var(--sheet);
+  font-size: 0.94rem;
+  color: var(--ink-soft);
+}
+.answer-ref p {
+  margin: 0;
+}
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pen);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-thickness: 1px;
+}
+
+.note-end {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sheet-rule);
+  font-family: 'PingFang SC', 'Noto Sans CJK SC', system-ui, sans-serif;
+  font-size: 0.92rem;
+}
+.note-end p {
+  margin: 0 0 10px;
+}
+.note-end div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.note-foot {
+  width: min(760px, 100% - 48px);
+  margin: 10px auto 0;
+  text-align: right;
+  font-size: 0.78rem;
+}
+
+@media (hover: hover) {
+  .mode-switch button:hover:not(.active) {
+    color: var(--on-ink);
+  }
+  .speed button:hover:not(.active) {
+    color: var(--ink);
+  }
+}
+
+@media (max-width: 760px) {
+  .note-head {
+    padding: 10px 16px 8px;
+    grid-template-columns: 1fr;
+  }
+  .dot-label {
+    display: none;
+  }
+  .note-doc {
+    width: calc(100% - 32px);
+    margin-top: 16px;
+    padding: 22px 18px 28px 26px;
+    font-size: 1rem;
+  }
+  .note-doc::before {
+    left: 12px;
+  }
+  .stop-bubble {
+    margin-inline: -8px;
+    padding: 12px 12px 10px;
+  }
+  .stop-keys {
+    display: none;
+  }
+  .stop-row {
+    justify-content: flex-end;
+  }
+  .note-foot {
+    width: calc(100% - 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stop-bubble,
+  .stop-bubble.closing,
+  .note-answer {
+    animation: none;
+  }
+  .caret {
+    animation: none;
+  }
+}

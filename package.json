@@ -1,0 +1,20 @@
+{
+  "name": "teachback",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_USE_ENV_PROXY=1 vite --host 127.0.0.1 --port 5174 --strictPort",
+    "build": "vite build",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "marked": "^15.0.12",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "prettier": "^3.10.1",
+    "prettier-plugin-svelte": "^4.1.1",
+    "vite": "^6.0.0"
+  }
+}

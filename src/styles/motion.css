@@ -1,0 +1,760 @@
+/* Libiamo's paper, books and motion, carried into Teachback. */
+
+:root {
+  /* A faint paper grain under everything, on the root so it reaches the bottom of the window. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.16 0 0 0 0 0.14 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+h1,
+h2 {
+  font-family: var(--song);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+::selection {
+  background: color-mix(in srgb, var(--brass) 32%, transparent);
+}
+
+/* Entrances: content rises out of a soft blur, one item after another. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+.stagger > * {
+  animation: rise-in 0.8s var(--ease-out) both;
+}
+.stagger > :nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stagger > :nth-child(2) {
+  animation-delay: 0.14s;
+}
+.stagger > :nth-child(3) {
+  animation-delay: 0.23s;
+}
+.stagger > :nth-child(4) {
+  animation-delay: 0.31s;
+}
+.stagger > :nth-child(5) {
+  animation-delay: 0.38s;
+}
+.stagger > :nth-child(6) {
+  animation-delay: 0.44s;
+}
+.stagger > :nth-child(7) {
+  animation-delay: 0.5s;
+}
+.stagger > :nth-child(8) {
+  animation-delay: 0.55s;
+}
+.stagger > :nth-child(n + 9) {
+  animation-delay: 0.6s;
+}
+
+/* Page turns between views: Libiamo's editorial sweep. */
+.page-root {
+  view-transition-name: page-content;
+}
+html[data-page-transition] {
+  --page-slide-distance: clamp(8rem, 24vw, 24rem);
+  --page-sweep-duration: 420ms;
+  --page-sweep-ease: cubic-bezier(0.33, 1, 0.68, 1);
+}
+html[data-page-transition]::view-transition-old(root),
+html[data-page-transition]::view-transition-new(root) {
+  animation: none;
+}
+html[data-page-transition]::view-transition-group(page-content) {
+  animation-duration: var(--page-sweep-duration);
+  animation-timing-function: var(--page-sweep-ease);
+}
+html[data-page-transition='forward']::view-transition-old(page-content) {
+  animation:
+    page-exit-left var(--page-sweep-duration) var(--page-sweep-ease) both,
+    page-fade-out 130ms var(--page-sweep-ease) both;
+}
+html[data-page-transition='forward']::view-transition-new(page-content) {
+  animation:
+    page-enter-right var(--page-sweep-duration) var(--page-sweep-ease) both,
+    page-fade-in 150ms var(--page-sweep-ease) both;
+}
+html[data-page-transition='backward']::view-transition-old(page-content) {
+  animation:
+    page-exit-right var(--page-sweep-duration) var(--page-sweep-ease) both,
+    page-fade-out 130ms var(--page-sweep-ease) both;
+}
+html[data-page-transition='backward']::view-transition-new(page-content) {
+  animation:
+    page-enter-left var(--page-sweep-duration) var(--page-sweep-ease) both,
+    page-fade-in 150ms var(--page-sweep-ease) both;
+}
+@keyframes page-exit-left {
+  to {
+    transform: translateX(calc(-1 * var(--page-slide-distance))) rotate(-0.35deg);
+  }
+}
+@keyframes page-enter-right {
+  from {
+    transform: translateX(var(--page-slide-distance)) rotate(0.35deg);
+  }
+}
+@keyframes page-exit-right {
+  to {
+    transform: translateX(var(--page-slide-distance)) rotate(0.35deg);
+  }
+}
+@keyframes page-enter-left {
+  from {
+    transform: translateX(calc(-1 * var(--page-slide-distance))) rotate(-0.35deg);
+  }
+}
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (max-width: 767px) {
+  html[data-page-transition] {
+    --page-slide-distance: 42vw;
+    --page-sweep-duration: 320ms;
+  }
+}
+
+/* Course shelf: each course is a cloth-bound book. */
+.course-shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 46px 34px;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.shelf-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.book {
+  --rx: 0deg;
+  --ry: 0deg;
+  --gx: 30%;
+  --gy: 22%;
+  --thick: 22px;
+  position: relative;
+  display: block;
+  width: min(100%, 236px);
+  margin: 0 auto;
+  aspect-ratio: 0.74;
+  padding: 0;
+  border: 0;
+  background: none;
+  perspective: 1600px;
+  -webkit-tap-highlight-color: transparent;
+}
+.book:focus-visible {
+  outline: none;
+}
+.book:focus-visible .cover-front {
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 0 0 5px var(--focus);
+}
+.book-shadow {
+  position: absolute;
+  left: 2%;
+  right: -6%;
+  bottom: -7%;
+  height: 13%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(45, 41, 36, 0.34), rgba(45, 41, 36, 0.12) 48%, transparent 74%);
+  filter: blur(9px);
+  transition:
+    transform 420ms var(--ease-out),
+    opacity 420ms var(--ease-out);
+}
+.book-body {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 520ms var(--ease-out);
+}
+.book-back,
+.book-fore,
+.book-head,
+.book-leaf,
+.book-cover,
+.cover-front,
+.cover-inside {
+  position: absolute;
+}
+.book-back {
+  inset: 0;
+  border-radius: 3px 7px 7px 3px;
+  background: color-mix(in srgb, var(--cloth) 72%, black);
+  transform: translateZ(calc(-1 * var(--thick)));
+}
+/* The fore-edge and head show the stacked pages when the book leans. */
+.book-fore {
+  top: 2.5%;
+  bottom: 2.5%;
+  right: 3px;
+  width: var(--thick);
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  background:
+    linear-gradient(90deg, rgba(45, 41, 36, 0.22), rgba(45, 41, 36, 0.06) 45%),
+    repeating-linear-gradient(90deg, #cbbda4 0 1px, #eadfcb 1px 3px);
+}
+.book-head {
+  top: 3px;
+  left: 4px;
+  right: 3px;
+  height: var(--thick);
+  transform-origin: center top;
+  transform: rotateX(-90deg);
+  background:
+    linear-gradient(0deg, rgba(45, 41, 36, 0.2), rgba(45, 41, 36, 0.06) 45%),
+    repeating-linear-gradient(0deg, #cbbda4 0 1px, #eadfcb 1px 3px);
+}
+.book-leaf {
+  inset: 2.5% 3px 2.5% 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 18px;
+  background: linear-gradient(90deg, #efe5d3, var(--sheet) 12%);
+  border-radius: 1px 4px 4px 1px;
+  transform: translateZ(-2px);
+  text-align: left;
+  overflow: hidden;
+}
+.leaf-kicker {
+  font-family: var(--song);
+  font-size: 0.95rem;
+  color: var(--pen);
+}
+.leaf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.leaf-list span {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-bottom: 4px;
+  border-bottom: 1px dotted var(--rule);
+}
+.leaf-list span.ready {
+  color: var(--ink);
+}
+.leaf-list i {
+  font-style: normal;
+  color: var(--brass-dark);
+  font-variant-numeric: tabular-nums;
+}
+.leaf-blank {
+  border: 0 !important;
+  font-style: italic;
+}
+.book-cover {
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transform: translateZ(1px);
+  transition: transform 760ms cubic-bezier(0.55, 0.05, 0.22, 1);
+}
+.cover-front,
+.cover-inside {
+  inset: 0;
+  border-radius: 3px 7px 7px 3px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.cover-front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 22px;
+  overflow: hidden;
+  color: #e6cf98;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.3) 0,
+      rgba(255, 255, 255, 0.1) 5px,
+      rgba(0, 0, 0, 0.08) 9px,
+      transparent 16px
+    ),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.04) 0 2px, transparent 2px 4px), var(--cloth);
+  box-shadow:
+    inset -2px 0 4px -2px rgba(0, 0, 0, 0.35),
+    inset 0 -2px 4px -2px rgba(0, 0, 0, 0.3);
+}
+.cover-inside {
+  transform: rotateY(180deg);
+  background:
+    radial-gradient(circle at 20% 30%, rgba(179, 145, 80, 0.22), transparent 40%),
+    radial-gradient(circle at 70% 70%, rgba(128, 57, 69, 0.18), transparent 45%), #efe3cc;
+}
+.cover-rule {
+  position: absolute;
+  top: 9%;
+  left: 11%;
+  right: 11%;
+  height: 4px;
+  border-top: 1px solid rgba(230, 207, 152, 0.7);
+  border-bottom: 1px solid rgba(230, 207, 152, 0.4);
+}
+.cover-rule.bottom {
+  top: auto;
+  bottom: 9%;
+}
+.cover-code {
+  padding: 1px 10px;
+  border: 1px solid rgba(230, 207, 152, 0.65);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.cover-title {
+  font-family: var(--song);
+  font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+.cover-term {
+  min-height: 1em;
+  font-size: 0.74rem;
+  color: rgba(230, 207, 152, 0.78);
+}
+.cover-gloss {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--gx) var(--gy),
+    rgba(255, 241, 212, 0.2),
+    rgba(255, 241, 212, 0.05) 32%,
+    transparent 60%
+  );
+  pointer-events: none;
+  transition: background-position 200ms;
+}
+@media (hover: hover) {
+  .book:hover .book-body {
+    transform: translateY(-8px) rotateX(var(--rx)) rotateY(var(--ry));
+    transition-duration: 240ms;
+  }
+  .book:hover .book-shadow {
+    transform: scale(0.92) translateY(6px);
+    opacity: 0.7;
+  }
+}
+/* Opening: the book comes forward and its cover swings round on the spine. */
+.book.opening .book-body {
+  transform: translateX(56%) translateZ(24px) rotateX(3deg);
+  transition: transform 700ms var(--ease-out);
+}
+.book.opening .book-cover {
+  transform: translateZ(1px) rotateY(-158deg);
+}
+/* The opening book rises above the shelf, and the rest of the shelf steps back so the cover swings over nothing. */
+.course-shelf.opening .shelf-slot {
+  animation: none;
+  transition:
+    opacity 360ms var(--ease-out),
+    transform 360ms var(--ease-out);
+}
+.course-shelf.opening .shelf-slot:not(.chosen) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+.course-shelf.opening .shelf-slot.chosen {
+  position: relative;
+  z-index: 2;
+}
+.course-shelf.opening .chosen .book-caption {
+  opacity: 0;
+  transition: opacity 240ms var(--ease-out);
+}
+.book.opening .book-shadow {
+  transform: translateX(40%) scale(1.8, 1);
+  opacity: 0.5;
+}
+
+.book-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 236px);
+  margin: 0 auto;
+}
+.book-caption .course-description {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.book-caption .course-stats {
+  padding: 0;
+  margin: 0;
+}
+.book-caption .course-parsing {
+  margin: 0;
+  color: var(--pen);
+}
+.book-caption .course-delete {
+  position: static;
+  align-self: flex-start;
+  margin: 0;
+  font-size: 0.76rem;
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+}
+.shelf-slot:hover .course-delete,
+.course-delete:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .book-caption .course-delete {
+    opacity: 1;
+  }
+}
+
+.blank-book {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: 3px 7px 7px 3px;
+  color: var(--muted);
+  font-weight: 600;
+  transition:
+    border-color 150ms var(--ease-out),
+    background-color 150ms var(--ease-out),
+    transform 240ms var(--ease-out);
+}
+.blank-book small {
+  font-weight: 400;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+.blank-mark {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--brass);
+  border-radius: 50%;
+  color: var(--brass-dark);
+  font-size: 1.5rem;
+  font-weight: 400;
+  transition: transform 350ms var(--ease-spring);
+}
+@media (hover: hover) {
+  .blank-book:hover {
+    border-color: var(--brass);
+    background: color-mix(in srgb, var(--brass) 7%, transparent);
+    transform: translateY(-4px);
+  }
+  .blank-book:hover .blank-mark {
+    transform: rotate(90deg) scale(1.06);
+  }
+}
+
+@media (max-width: 560px) {
+  .course-shelf {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 34px 18px;
+  }
+  .book {
+    --thick: 14px;
+  }
+  .cover-front {
+    padding: 16px 12px;
+    gap: 8px;
+  }
+  .cover-title {
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* A sheet that floats over the page, as Libiamo's panels do. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(45, 41, 36, 0.26);
+  backdrop-filter: blur(3px);
+  animation: page-fade-in 200ms var(--ease-out) both;
+}
+.sheet-panel {
+  width: min(460px, 100%);
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.05),
+    0 18px 60px rgba(45, 41, 36, 0.2);
+  animation: panel-in 260ms var(--ease-out) both;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+/* Chapter cards take Libiamo's quest cards: a rule above and below, a quiet lift on hover. */
+.chapter-card {
+  border-radius: 3px 10px 10px 3px;
+  transition:
+    transform 240ms var(--ease-out),
+    box-shadow 240ms var(--ease-out),
+    border-color 150ms var(--ease-out);
+}
+.chapter-card::before {
+  border-left-color: color-mix(in srgb, var(--pen) 22%, transparent);
+}
+.chapter-card.status-done::after {
+  right: -8px;
+  padding: 0 14px 0 10px;
+  clip-path: polygon(0 0, 100% 0, 92% 50%, 100% 100%, 0 100%);
+  background: var(--pen);
+  box-shadow: none;
+}
+@media (hover: hover) {
+  .chapter-card:has(.chapter-open):hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--pen) 40%, transparent);
+    box-shadow: 0 22px 40px -26px rgba(128, 57, 69, 0.5);
+  }
+}
+
+/* While the teacher reads, a pen keeps writing a line of ink. */
+.ink-write {
+  display: block;
+  width: 132px;
+  height: 26px;
+  margin-bottom: 8px;
+  overflow: visible;
+}
+.ink-write path {
+  fill: none;
+  stroke: var(--pen);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 180;
+  stroke-dashoffset: 180;
+  animation: ink-draw 2.4s var(--ease-out) infinite;
+}
+.ink-write circle {
+  fill: var(--pen);
+  offset-path: path('M2 15 C 12 3, 18 24, 30 13 S 46 3, 56 14 S 74 24, 84 11 S 102 5, 112 15 L 128 12');
+  animation: ink-nib 2.4s var(--ease-out) infinite;
+}
+@keyframes ink-draw {
+  70% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes ink-nib {
+  from {
+    offset-distance: 0%;
+  }
+  70% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/* A chapter the teacher has just finished arrives with a brass seal. */
+.chapter-card.just-ready {
+  animation: card-arrive 900ms var(--ease-out) both;
+}
+@keyframes card-arrive {
+  0% {
+    box-shadow: 0 0 0 0 rgba(179, 145, 80, 0.6);
+  }
+  60% {
+    box-shadow: 0 0 0 14px rgba(179, 145, 80, 0);
+  }
+}
+.seal {
+  position: absolute;
+  top: 46px;
+  right: 18px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--pen);
+  border-radius: 50%;
+  color: var(--pen);
+  font-family: var(--song);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  box-shadow:
+    inset 0 0 0 3px var(--sheet),
+    inset 0 0 0 4px color-mix(in srgb, var(--pen) 60%, transparent);
+  opacity: 0.85;
+  transform: rotate(-14deg);
+  animation: seal-stamp 520ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  pointer-events: none;
+}
+@keyframes seal-stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-30deg) scale(2.2);
+  }
+}
+
+/* Stop bubble: Libiamo's floating panel instead of a hard border. */
+.stop-bubble {
+  border: 0;
+  border-radius: 14px;
+  font-family: inherit;
+  box-shadow:
+    0 0 0 1px rgba(45, 41, 36, 0.1),
+    0 2px 6px rgba(45, 41, 36, 0.05),
+    0 18px 48px -12px rgba(45, 41, 36, 0.22);
+  animation-timing-function: var(--ease-spring);
+}
+.caret {
+  background: var(--pen);
+}
+
+/* The learner's answer is inked in from left to right, and a fresh one is sealed. */
+.note-answer {
+  position: relative;
+  border-left-color: var(--pen-ink);
+  background: color-mix(in srgb, var(--pen-ink) 5%, transparent);
+  animation: none;
+}
+.note-answer figcaption {
+  font-family: inherit;
+}
+.note-answer.fresh {
+  padding-right: 72px;
+  animation: answer-ink-in 900ms var(--ease-out) both;
+}
+@keyframes answer-ink-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.note-answer.fresh::after {
+  content: '答对';
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--pen);
+  border-radius: 50%;
+  color: var(--pen);
+  font-family: var(--song);
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.8;
+  transform: rotate(-12deg);
+  animation: seal-stamp 520ms cubic-bezier(0.3, 1.6, 0.5, 1) 700ms both;
+}
+
+/* Buttons press in, as Libiamo's do. */
+:is(button, .file-button):not(:disabled):active {
+  transform: scale(0.97);
+}
+.book:not(:disabled):active,
+.chapter-open:active {
+  transform: none;
+}
+:is(.primary, .send, .secondary, .link-button, .chapter-card, .course-add) {
+  transition-property: background-color, color, border-color, box-shadow, transform, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > *,
+  .sheet-backdrop,
+  .sheet-panel,
+  .chapter-card.just-ready,
+  .seal,
+  .note-answer.fresh,
+  .note-answer.fresh::after,
+  .ink-write path,
+  .ink-write circle {
+    animation: none;
+  }
+  .ink-write path {
+    stroke-dashoffset: 0;
+  }
+  .book-body,
+  .book-cover,
+  .book-shadow,
+  .blank-book,
+  .blank-mark {
+    transition: none;
+  }
+  html[data-page-transition]::view-transition-group(page-content),
+  html[data-page-transition]::view-transition-old(page-content),
+  html[data-page-transition]::view-transition-new(page-content) {
+    animation-duration: 1ms;
+  }
+}
