@@ -2,8 +2,8 @@
 
 Learn from the teacher, then teach it to a student.
 
-- **老师带我 (the teacher leads)**: the teacher reads the course material you upload and writes a lecture note letter by letter. At key points it stops and asks a question at the caret. A correct answer goes into the note in your own words; a wrong one gets a narrower follow-up until you get there. Finished notes export to Markdown.
-- **我讲给学生 (you teach a student)**: a student who has read the chapter's note asks you four questions (concept, derivation, distinction, changed conditions). Where you got stuck in the note, the student asks about it, carrying what you thought at the time. When you can't explain something, 问老师 (ask the teacher) answers by quoting only this chapter's material, with page numbers.
+- **The teacher leads**: the teacher reads the course material you upload and writes a lecture note letter by letter. At key points it stops and asks a question at the caret. A correct answer goes into the note in your own words; a wrong one gets a narrower follow-up until you get there. Finished notes export to Markdown.
+- **You teach a student**: a student who has read the chapter's note asks you four questions (concept, derivation, distinction, changed conditions). Where you got stuck in the note, the student asks about it, carrying what you thought at the time. When you can't explain something, *ask the teacher* answers by quoting only this chapter's material, with page numbers.
 
 ## Running
 
