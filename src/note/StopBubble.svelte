@@ -1,6 +1,7 @@
 <script>
   import { onMount, tick } from 'svelte';
   import { math, renderMarkdown } from '../lib/markdown.js';
+  import { readerAway } from '../lib/typewriter.js';
 
   let { courseSlug, chapterId, stop, number, total, answers, thread, draft, onThread, onDraft, onSolved } = $props();
   const kinds = { concept: '概念澄清', derive: '推导计算', contrast: '方法辨析' };
@@ -13,7 +14,9 @@
   let error = $state('');
 
   const target = $derived(thread.findLast((turn) => turn.who === 'teacher')?.next ?? 'main');
-  const attempts = $derived(thread.filter((turn) => turn.who === 'me' && turn.target === 'main').length);
+  const attempts = $derived(
+    thread.filter((turn) => turn.who === 'me' && turn.target === 'main' && !turn.settle).length
+  );
   const lastTeacher = $derived(thread.findLastIndex((turn) => turn.who === 'teacher'));
 
   // The bubble grows out of the pen: its tail sits under the caret left at the end of the text.
@@ -30,16 +33,17 @@
     const later = setTimeout(aim, 350);
     addEventListener('resize', aim);
     input?.focus({ preventScroll: true });
-    bubble?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (!readerAway(bubble?.closest('.note-doc'))) bubble?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     return () => {
       clearTimeout(later);
       removeEventListener('resize', aim);
     };
   });
 
-  async function submit(giveUp = false) {
-    const text = giveUp ? '' : (draft ?? '').trim();
-    if (waiting || closing || (!giveUp && !text)) return;
+  // settle: the learner says they have explained it; the teacher re-reads the whole thread and decides.
+  async function submit(giveUp = false, settle = false) {
+    const text = giveUp || settle ? '' : (draft ?? '').trim();
+    if (waiting || closing || (!giveUp && !settle && !text)) return;
     waiting = true;
     error = '';
     try {
@@ -54,6 +58,7 @@
           thread: thread.slice(-24),
           answer: text,
           target,
+          settle,
           answers
         })
       });
@@ -64,15 +69,17 @@
       }
       if (result.solved) {
         closing = true;
-        setTimeout(() => onSolved(text, attempts + 1), 320);
+        setTimeout(() => onSolved(result.note || text, attempts + 1, text), 320);
         return;
       }
       onThread([
         ...thread,
-        { who: 'me', target, text: text || '（不会）' },
+        settle
+          ? { who: 'me', target, text: '我已经讲清楚了', settle }
+          : { who: 'me', target, text: text || '（不会）' },
         { who: 'teacher', text: result.reply, verdict: result.verdict, next: result.next }
       ]);
-      onDraft('');
+      if (!settle) onDraft('');
       await tick();
       input?.focus({ preventScroll: true });
       bubble?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -142,6 +149,11 @@
   {#if error}<p class="coach-error" role="alert">{error}</p>{/if}
   <div class="stop-row">
     <span class="stop-keys"></span>
+    {#if thread.some((turn) => turn.who === 'me' && !turn.settle)}
+      <button class="secondary quiet" disabled={waiting || closing} onclick={() => submit(false, true)}
+        >我已经讲清楚了</button
+      >
+    {/if}
     <button class="secondary quiet" disabled={waiting || closing} onclick={() => submit(true)}>不会</button>
     <button class="send" disabled={waiting || closing || !draft?.trim()} onclick={() => submit()}>提交</button>
   </div>

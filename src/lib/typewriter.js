@@ -31,6 +31,10 @@ function unhide(node, root) {
   }
 }
 
+// Documents whose reader scrolled away from the pen; kept per document so the next paragraph does not pull them back.
+const away = new WeakMap();
+export const readerAway = (doc) => away.get(doc) === true;
+
 /**
  * Writes rendered Markdown into the node like a pen.
  * params: { html, mode: 'type' | 'done', cps, skip, caret, onDone }
@@ -44,6 +48,7 @@ export function typewriter(node, params) {
   let frame = 0;
   let typing = false;
   let destroyed = false;
+  let followedY = scrollY;
   const pen = document.createElement('span');
   pen.className = 'caret';
   pen.setAttribute('aria-hidden', 'true');
@@ -55,9 +60,15 @@ export function typewriter(node, params) {
     else node.append(pen);
   }
 
+  // A scroll the pen did not make is the reader's: scrolling up stops following, scrolling back down to the pen resumes it.
   function follow() {
     const box = pen.getBoundingClientRect();
-    if (box.height && box.bottom > innerHeight * 0.72) scrollBy({ top: box.bottom - innerHeight * 0.58 });
+    if (!box.height) return;
+    if (scrollY < followedY - 1) away.set(node.parentElement, true);
+    else if (scrollY > followedY + 1 && box.bottom <= innerHeight) away.set(node.parentElement, false);
+    if (!readerAway(node.parentElement) && box.bottom > innerHeight * 0.72)
+      scrollBy({ top: box.bottom - innerHeight * 0.58 });
+    followedY = scrollY;
   }
 
   function cost() {

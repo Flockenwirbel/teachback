@@ -120,7 +120,7 @@ export function strugglesFor(course, chapter) {
       stopId,
       rounds: answer.rounds,
       wrong: (answer.thread ?? [])
-        .filter((turn) => turn.who === 'me' && turn.target === 'main')
+        .filter((turn) => turn.who === 'me' && turn.target === 'main' && !turn.settle)
         .map((turn) => turn.text),
       final: answer.text
     }));

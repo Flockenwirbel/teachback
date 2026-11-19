@@ -68,11 +68,11 @@
     if ((progress[id]?.pos ?? 0) === index) patch(id, { pos: index + 1 });
   }
 
-  function solved(stop, index, text, rounds) {
+  function solved(stop, index, text, rounds, said) {
     const { threads, drafts } = sheet;
     patch(selected, {
       pos: index + 1,
-      answers: { ...sheet.answers, [stop.id]: { text, rounds, thread: threads[stop.id] ?? [], at: Date.now() } },
+      answers: { ...sheet.answers, [stop.id]: { text, rounds, said, thread: threads[stop.id] ?? [], at: Date.now() } },
       threads: { ...threads, [stop.id]: undefined },
       drafts: { ...drafts, [stop.id]: undefined }
     });
@@ -223,7 +223,7 @@
               draft={sheet.drafts[segment.id]}
               onThread={(thread) => patch(note.id, { threads: { ...sheet.threads, [segment.id]: thread } })}
               onDraft={(draft) => patch(note.id, { drafts: { ...sheet.drafts, [segment.id]: draft } })}
-              onSolved={(text, rounds) => solved(segment, index, text, rounds)}
+              onSolved={(text, rounds, said) => solved(segment, index, text, rounds, said)}
             />
           {/if}
         {/each}
