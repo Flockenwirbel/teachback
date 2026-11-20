@@ -1,7 +1,7 @@
 import { activity, proposeCourse } from './hall.js';
 import { RequestError, readBody, send, serveFile } from './http.js';
 import { chapterPages, library } from './library.js';
-import { createClient, defaultModel } from './openrouter.js';
+import { createClient, defaultBaseUrl, defaultModel } from './openrouter.js';
 import { getChapter, getCourse, listQuestions, setStopSolution } from './store.js';
 import { gradeExplanation } from './student/grade.js';
 import { askTeacher } from './teacher/ask.js';
@@ -13,10 +13,18 @@ export { defaultModel };
 const solverModel = 'anthropic/claude-sonnet-5.5';
 
 // /api/courses manages courses and chapters, /api/activity and /api/propose feed the hall's sidebar, /api/coach runs one model turn, /files serves attachments.
-export function apiMiddleware({ key, model = defaultModel, parseModel, solveModel = solverModel, fetcher = fetch }) {
-  const client = createClient({ key, model, fetcher });
-  const solver = createClient({ key, model: solveModel, fetcher });
-  const reader = createClient({ key, model: parseModel || model, fetcher });
+export function apiMiddleware({
+  key,
+  baseUrl = defaultBaseUrl,
+  model = defaultModel,
+  parseModel,
+  // The default solver is an OpenRouter model name; other providers use the main model unless one is set.
+  solveModel = baseUrl === defaultBaseUrl ? solverModel : model,
+  fetcher = fetch
+}) {
+  const client = createClient({ key, baseUrl, model, fetcher });
+  const solver = createClient({ key, baseUrl, model: solveModel, fetcher });
+  const reader = createClient({ key, baseUrl, model: parseModel || model, fetcher });
   return async (req, res, next) => {
     const path = req.url?.split('?')[0] ?? '';
     const isFile = path.startsWith('/files/');
@@ -38,7 +46,7 @@ export function apiMiddleware({ key, model = defaultModel, parseModel, solveMode
       if (!/^application\/json(?:;|$)/i.test(req.headers['content-type'] ?? '')) {
         return send(res, 403, { error: '请从本地页面发起请求。' });
       }
-      if (!key) return send(res, 503, { error: '请在项目的 .env.local 设置 OPENROUTER_API_KEY，然后重启服务。' });
+      if (!key) return send(res, 503, { error: '请在项目的 .env.local 设置 LLM_API_KEY，然后重启服务。' });
       const body = await readBody(req);
       if (!body || typeof body !== 'object') throw new RequestError(400, '请求格式有误。');
       const course = getCourse(body.course);
@@ -64,9 +72,9 @@ export function apiMiddleware({ key, model = defaultModel, parseModel, solveMode
       send(res, 200, await gradeExplanation(client, bank, body));
     } catch (error) {
       if (error instanceof RequestError) return send(res, error.status, { error: error.message });
-      if (error?.name === 'TimeoutError') return send(res, 504, { error: '连接 OpenRouter 超时，请稍后重试。' });
+      if (error?.name === 'TimeoutError') return send(res, 504, { error: '连接模型服务超时，请稍后重试。' });
       console.error(error);
-      send(res, 502, { error: '连接 OpenRouter 失败，请稍后重试。' });
+      send(res, 502, { error: '连接模型服务失败，请稍后重试。' });
     }
   };
 }

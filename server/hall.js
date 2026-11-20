@@ -93,7 +93,7 @@ export async function proposeCourse(client, req) {
   const original = decodeURIComponent(req.headers['x-filename'] ?? '');
   const ext = extname(original).toLowerCase();
   if (!acceptedTypes.includes(ext)) throw new RequestError(415, `只支持 ${acceptedTypes.join('、')} 附件。`);
-  if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 OPENROUTER_API_KEY，然后重启服务。');
+  if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 LLM_API_KEY，然后重启服务。');
   const bytes = await readRaw(req, MAX_UPLOAD, '附件超过 40 MB。');
   if (!bytes.length) throw new RequestError(400, '附件是空的。');
 

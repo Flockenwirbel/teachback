@@ -4,13 +4,16 @@ import { apiMiddleware, defaultModel } from './server/index.js';
 import { configureStore, database } from './server/store.js';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), ['OPENROUTER_', 'TEACHBACK_']);
+  const env = loadEnv(mode, process.cwd(), ['LLM_', 'OPENROUTER_', 'TEACHBACK_']);
   configureStore({ path: env.TEACHBACK_DB?.trim() });
+  // LLM_* names any OpenAI-compatible provider; the older OPENROUTER_* names still work.
+  const setting = (name) => (env[`LLM_${name}`] || env[`OPENROUTER_${name}`])?.trim() || undefined;
   const middleware = apiMiddleware({
-    key: env.OPENROUTER_API_KEY?.trim(),
-    model: env.OPENROUTER_MODEL?.trim() || defaultModel,
-    parseModel: env.OPENROUTER_PARSE_MODEL?.trim(),
-    solveModel: env.OPENROUTER_SOLVE_MODEL?.trim() || undefined
+    key: setting('API_KEY'),
+    baseUrl: setting('BASE_URL'),
+    model: setting('MODEL') || defaultModel,
+    parseModel: setting('PARSE_MODEL'),
+    solveModel: setting('SOLVE_MODEL')
   });
   return {
     base: './',

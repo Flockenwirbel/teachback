@@ -110,7 +110,7 @@ export async function library(req, res, client, parts) {
     if (!acceptedTypes.includes(extname(original).toLowerCase())) {
       throw new RequestError(415, `只支持 ${acceptedTypes.join('、')} 附件。`);
     }
-    if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 OPENROUTER_API_KEY，然后重启服务。');
+    if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 LLM_API_KEY，然后重启服务。');
     const bytes = await readRaw(req, MAX_UPLOAD, '附件超过 40 MB。');
     if (!bytes.length) throw new RequestError(400, '附件是空的。');
     const name = storedName(slug, original);
@@ -136,7 +136,7 @@ export async function library(req, res, client, parts) {
     if (!chapter.source || !existsSync(join(filesDir, slug, chapter.source)))
       throw new RequestError(409, '这一章没有可读的课件。');
     if (chapter.status === 'parsing') return send(res, 202, { chapter });
-    if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 OPENROUTER_API_KEY，然后重启服务。');
+    if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 LLM_API_KEY，然后重启服务。');
     const started = updateChapter(slug, chapter.id, { status: 'parsing', error: null });
     // A title that is only the file name is a placeholder; any other title was chosen and stays.
     const placeholder = chapter.title === basename(chapter.source, extname(chapter.source));
@@ -145,7 +145,7 @@ export async function library(req, res, client, parts) {
   }
   if (action === 'questions' && req.method === 'POST') {
     if (chapter.status !== 'ready') throw new RequestError(409, '这一章的笔记还没写好，学生无从提问。');
-    if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 OPENROUTER_API_KEY，然后重启服务。');
+    if (!client.key) throw new RequestError(503, '请在项目的 .env.local 设置 LLM_API_KEY，然后重启服务。');
     const body = await readBody(req);
     const pages = await chapterPages(slug, chapter);
     const questions = await generateQuestions(client, {
