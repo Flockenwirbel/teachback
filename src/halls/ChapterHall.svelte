@@ -100,6 +100,15 @@
   const parse = (chapter) => act(chapter.id, () => api.parse(course.slug, chapter.id));
   const attach = (chapter, file) =>
     file && act(chapter.id, () => api.upload(course.slug, file, { chapterId: chapter.id }));
+  function renumber(chapter) {
+    const answer = prompt(
+      `「${chapter.title}」改为第几章？已有这一章号的章节会换到第 ${chapter.number} 章。`,
+      chapter.number
+    );
+    const number = Number(answer);
+    if (answer && number !== chapter.number)
+      act(chapter.id, () => api.renumberChapter(course.slug, chapter.id, number));
+  }
   function remove(chapter) {
     if (confirm(`删除「${chapter.title}」这一章和它的笔记？`))
       act(chapter.id, () => api.removeChapter(course.slug, chapter.id));
@@ -274,6 +283,7 @@
           {:else if chapter.status === 'ready'}
             <button class="link-button" onclick={() => onTeach(chapter.number)}>让学生来问</button>
           {/if}
+          <button class="link-button" disabled={busy[chapter.id]} onclick={() => renumber(chapter)}>改章号</button>
           {#if chapter.status !== 'parsing'}
             <button class="link-button danger" disabled={busy[chapter.id]} onclick={() => remove(chapter)}>删除</button>
           {/if}
@@ -291,7 +301,9 @@
       ondragleave={() => (dragging = false)}
       ondrop={drop}
     >
-      <span class="chapter-number" aria-hidden="true">{String(chapters.length + 1).padStart(2, '0')}</span>
+      <span class="chapter-number" aria-hidden="true"
+        >{String(Math.max(0, ...chapters.map((chapter) => chapter.number)) + 1).padStart(2, '0')}</span
+      >
       <h2>新建一章</h2>
       <label class="upload-title">标题<input bind:value={uploadTitle} maxlength="60" placeholder="可不填" /></label>
       <label class="upload-drop" class:disabled={uploading}>

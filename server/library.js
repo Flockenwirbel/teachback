@@ -15,6 +15,7 @@ import {
   getPages,
   listCourses,
   listQuestions,
+  renumberChapter,
   replaceQuestions,
   saveProgress,
   setPages,
@@ -161,6 +162,12 @@ export async function library(req, res, client, parts) {
     if (!body || typeof body !== 'object' || Array.isArray(body)) throw new RequestError(400, '请求格式有误。');
     saveProgress(chapter.id, kind, JSON.stringify(body));
     return send(res, 200, { saved: true });
+  }
+  if (!action && req.method === 'PATCH') {
+    const number = (await readBody(req))?.number;
+    if (!Number.isInteger(number) || number < 1 || number > 99)
+      throw new RequestError(400, '章号应是 1 到 99 的整数。');
+    return send(res, 200, { chapter: renumberChapter(slug, chapter.id, number) });
   }
   if (!action && req.method === 'DELETE') {
     deleteChapter(slug, chapter.id);

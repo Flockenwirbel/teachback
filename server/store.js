@@ -202,13 +202,16 @@ function countQuestions(slug) {
 }
 
 export function listQuestions(slug) {
-  return database()
-    .prepare(
-      `SELECT q.body FROM questions q JOIN chapters c ON c.id = q.chapter_id
+  return (
+    database()
+      .prepare(
+        `SELECT q.body, q.position, c.number FROM questions q JOIN chapters c ON c.id = q.chapter_id
     WHERE q.course = ? ORDER BY c.number, q.position`
-    )
-    .all(slug)
-    .map((row) => JSON.parse(row.body));
+      )
+      .all(slug)
+      // A question carries its chapter's current number, which changes when chapters are renumbered.
+      .map((row) => ({ ...JSON.parse(row.body), chapter: row.number, number: `${row.number}.${row.position + 1}` }))
+  );
 }
 
 export function replaceQuestions(slug, chapterId, items) {
@@ -259,6 +262,23 @@ export function addChapter(slug, { title, sourceFile }) {
     VALUES (?, ?, ?, ?, ?, 'parsing', ?, ?)`
     )
     .run(id, slug, number, title, sourceFile, now, now);
+  return getChapter(slug, id);
+}
+
+// A chapter takes the number it is given; a chapter already holding that number takes the old one.
+export function renumberChapter(slug, id, number) {
+  const store = database();
+  const row = store.prepare('SELECT number FROM chapters WHERE course = ? AND id = ?').get(slug, id);
+  if (!row) return null;
+  store.exec('BEGIN');
+  try {
+    store.prepare('UPDATE chapters SET number = ? WHERE course = ? AND number = ?').run(row.number, slug, number);
+    store.prepare('UPDATE chapters SET number = ? WHERE course = ? AND id = ?').run(number, slug, id);
+    store.exec('COMMIT');
+  } catch (error) {
+    store.exec('ROLLBACK');
+    throw error;
+  }
   return getChapter(slug, id);
 }
 

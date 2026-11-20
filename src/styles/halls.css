@@ -472,7 +472,7 @@
 .link-button.danger {
   color: var(--red);
 }
-.chapter-foot .link-button + .link-button.danger,
+.chapter-foot .link-button + .link-button,
 .chapter-foot .link-button.danger:first-child {
   margin-left: 0;
 }

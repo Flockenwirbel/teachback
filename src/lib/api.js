@@ -61,5 +61,7 @@ export const api = {
     }).then((body) => body.chapter),
   parse: (slug, id) =>
     call(`./api/courses/${slug}/chapters/${id}/parse`, { method: 'POST' }).then((body) => body.chapter),
+  renumberChapter: (slug, id, number) =>
+    call(`./api/courses/${slug}/chapters/${id}`, json('PATCH', { number })).then((body) => body.chapter),
   removeChapter: (slug, id) => call(`./api/courses/${slug}/chapters/${id}`, { method: 'DELETE' })
 };
