@@ -315,7 +315,7 @@
   transform-origin: 0 100%;
 }
 /* A sent message is squeezed out of the input; the reply pops up from the teacher's side. */
-.stop-thread .pop {
+:is(.stop-thread, .turns) .pop {
   animation: message-pop 0.36s var(--ease-spring, cubic-bezier(0.34, 1.35, 0.64, 1)) both;
 }
 @keyframes message-pop {
@@ -329,7 +329,7 @@
   gap: 4px;
   padding: 11px 14px;
 }
-.stop-thread .typing i {
+:is(.stop-thread, .turns) .typing i {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -337,10 +337,10 @@
   opacity: 0.4;
   animation: typing-dot 1.2s infinite ease-in-out;
 }
-.stop-thread .typing i:nth-of-type(2) {
+:is(.stop-thread, .turns) .typing i:nth-of-type(2) {
   animation-delay: 0.15s;
 }
-.stop-thread .typing i:nth-of-type(3) {
+:is(.stop-thread, .turns) .typing i:nth-of-type(3) {
   animation-delay: 0.3s;
 }
 @keyframes typing-dot {
@@ -531,8 +531,8 @@
   .stop-bubble,
   .stop-bubble.closing,
   .note-answer,
-  .stop-thread .pop,
-  .stop-thread .typing i {
+  :is(.stop-thread, .turns) .pop,
+  :is(.stop-thread, .turns) .typing i {
     animation: none;
   }
   .caret {

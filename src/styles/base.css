@@ -437,6 +437,32 @@ h1 {
 .msg.bot .bubble {
   flex: 1;
 }
+/* The student's replies are chat messages: sized to their text, a run of them under one avatar. */
+.turns .msg.bot .bubble {
+  flex: 0 1 auto;
+  max-width: 85%;
+}
+.msg.follow {
+  margin-top: -8px;
+}
+.msg.follow .avatar {
+  visibility: hidden;
+}
+.msg.follow .bubble {
+  border-radius: 14px;
+}
+.turns .msg.user {
+  transform-origin: 100% 0;
+}
+.turns .msg.bot {
+  transform-origin: 0 0;
+}
+.turns .typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 42px;
+}
 .msg.user .bubble {
   max-width: 85%;
   border-radius: 14px 4px 14px 14px;
