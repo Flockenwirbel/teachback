@@ -9,7 +9,8 @@ export default defineConfig(({ mode }) => {
   const middleware = apiMiddleware({
     key: env.OPENROUTER_API_KEY?.trim(),
     model: env.OPENROUTER_MODEL?.trim() || defaultModel,
-    parseModel: env.OPENROUTER_PARSE_MODEL?.trim()
+    parseModel: env.OPENROUTER_PARSE_MODEL?.trim(),
+    solveModel: env.OPENROUTER_SOLVE_MODEL?.trim() || undefined
   });
   return {
     base: './',

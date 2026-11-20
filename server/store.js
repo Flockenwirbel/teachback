@@ -283,6 +283,16 @@ export function updateChapter(slug, id, values) {
   return getChapter(slug, id);
 }
 
+// A worked solution made for one stop is kept in the note, so it is made only once.
+export function setStopSolution(slug, id, stopId, solution) {
+  const row = database().prepare('SELECT note FROM chapters WHERE course = ? AND id = ?').get(slug, id);
+  const note = row?.note ? JSON.parse(row.note) : null;
+  const stop = note?.segments.find((segment) => segment.type === 'stop' && segment.id === stopId);
+  if (!stop) return;
+  stop.solution = solution;
+  database().prepare('UPDATE chapters SET note = ? WHERE course = ? AND id = ?').run(JSON.stringify(note), slug, id);
+}
+
 export function deleteChapter(slug, id) {
   return database().prepare('DELETE FROM chapters WHERE course = ? AND id = ?').run(slug, id).changes > 0;
 }

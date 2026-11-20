@@ -68,11 +68,14 @@
     if ((progress[id]?.pos ?? 0) === index) patch(id, { pos: index + 1 });
   }
 
-  function solved(stop, index, text, rounds, said) {
+  function solved(stop, index, text, rounds, said, shown) {
     const { threads, drafts } = sheet;
     patch(selected, {
       pos: index + 1,
-      answers: { ...sheet.answers, [stop.id]: { text, rounds, said, thread: threads[stop.id] ?? [], at: Date.now() } },
+      answers: {
+        ...sheet.answers,
+        [stop.id]: { text, rounds, said, shown, thread: threads[stop.id] ?? [], at: Date.now() }
+      },
       threads: { ...threads, [stop.id]: undefined },
       drafts: { ...drafts, [stop.id]: undefined }
     });
@@ -195,7 +198,13 @@
               <figcaption>{segment.label}</figcaption>
               <p use:math>{answer.text}</p>
               <div class="answer-meta">
-                <span>{answer.rounds > 1 ? `第 ${answer.rounds} 次答对` : '一次答对'}</span>
+                <span
+                  >{answer.shown
+                    ? '看了参考后写出'
+                    : answer.rounds > 1
+                      ? `第 ${answer.rounds} 次答对`
+                      : '一次答对'}</span
+                >
                 <button
                   class="link-button"
                   aria-expanded={Boolean(opened[segment.id])}
@@ -223,7 +232,7 @@
               draft={sheet.drafts[segment.id]}
               onThread={(thread) => patch(note.id, { threads: { ...sheet.threads, [segment.id]: thread } })}
               onDraft={(draft) => patch(note.id, { drafts: { ...sheet.drafts, [segment.id]: draft } })}
-              onSolved={(text, rounds, said) => solved(segment, index, text, rounds, said)}
+              onSolved={(text, rounds, said, shown) => solved(segment, index, text, rounds, said, shown)}
             />
           {/if}
         {/each}

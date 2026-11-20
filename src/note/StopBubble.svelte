@@ -1,5 +1,5 @@
 <script>
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { math, renderMarkdown } from '../lib/markdown.js';
   import { readerAway } from '../lib/typewriter.js';
 
@@ -12,12 +12,16 @@
   let waiting = $state(false);
   let closing = $state(false);
   let error = $state('');
+  // The learner's message shows at once, while the teacher is still answering it.
+  let pending = $state(null);
+  // Messages already there when the bubble opened sit still; new ones pop in.
+  const seen = untrack(() => thread.length);
 
   const target = $derived(thread.findLast((turn) => turn.who === 'teacher')?.next ?? 'main');
   const attempts = $derived(
     thread.filter((turn) => turn.who === 'me' && turn.target === 'main' && !turn.settle).length
   );
-  const lastTeacher = $derived(thread.findLastIndex((turn) => turn.who === 'teacher'));
+  const turns = $derived(pending ? [...thread, pending] : thread);
 
   // The bubble grows out of the pen: its tail sits under the caret left at the end of the text.
   function aim() {
@@ -44,8 +48,18 @@
   async function submit(giveUp = false, settle = false) {
     const text = giveUp || settle ? '' : (draft ?? '').trim();
     if (waiting || closing || (!giveUp && !settle && !text)) return;
+    const mine = settle
+      ? { who: 'me', target, text: '我已经讲清楚了', settle }
+      : { who: 'me', target, text: text || '（不会）' };
     waiting = true;
     error = '';
+    pending = mine;
+    if (text) onDraft('');
+    tick().then(() => bubble?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+    const unsent = () => {
+      pending = null;
+      if (text && !(draft ?? '').trim()) onDraft(text);
+    };
     try {
       const response = await fetch('./api/coach', {
         method: 'POST',
@@ -65,26 +79,42 @@
       const result = await response.json();
       if (!response.ok) {
         error = result.error ?? '请求失败，请重试。';
+        unsent();
         return;
       }
       if (result.solved) {
         closing = true;
-        setTimeout(() => onSolved(result.note || text, attempts + 1, text), 320);
+        setTimeout(
+          () =>
+            onSolved(
+              result.note || text,
+              attempts + 1,
+              text,
+              thread.some((turn) => turn.shown)
+            ),
+          320
+        );
         return;
       }
       onThread([
         ...thread,
-        settle
-          ? { who: 'me', target, text: '我已经讲清楚了', settle }
-          : { who: 'me', target, text: text || '（不会）' },
-        { who: 'teacher', text: result.reply, verdict: result.verdict, next: result.next }
+        mine,
+        {
+          who: 'teacher',
+          text: result.reply,
+          verdict: result.verdict,
+          next: result.next,
+          shown: result.shown,
+          state: result.state
+        }
       ]);
-      if (!settle) onDraft('');
+      pending = null;
       await tick();
       input?.focus({ preventScroll: true });
       bubble?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     } catch {
       error = '无法连接本地服务，请确认它正在运行。';
+      unsent();
     } finally {
       waiting = false;
     }
@@ -113,30 +143,35 @@
   </header>
   <div class="stop-ask prose" use:math>{@html renderMarkdown(stop.ask)}</div>
 
-  {#if thread.length}
+  {#if turns.length}
     <ol class="stop-thread" aria-live="polite">
-      {#each thread as turn, index}
-        <li class="turn-{turn.who}" class:latest={index === lastTeacher}>
-          {#if turn.who === 'teacher'}<span class="turn-who">老师</span>{/if}
-          <p use:math>{turn.text}</p>
+      {#each turns as turn, index (index)}
+        <li class="turn-{turn.who}" class:pop={index >= seen}>
+          <span class="turn-who">{turn.who === 'teacher' ? '老师：' : '我：'}</span>
+          {#if turn.shown}
+            <div class="prose" use:math>{@html renderMarkdown(turn.text)}</div>
+          {:else}
+            <p use:math>{turn.text}</p>
+          {/if}
         </li>
       {/each}
+      {#if waiting && !closing}
+        <li class="turn-teacher typing pop" role="status">
+          <span class="turn-who">老师正在回复</span><i></i><i></i><i></i>
+        </li>
+      {/if}
     </ol>
   {/if}
 
-  {#if waiting}
-    <p class="stop-wait" role="status">老师在看你的回答<span class="dots" aria-hidden="true"></span></p>
-  {/if}
-
   <label class="stop-prompt" for="stop-input-{stop.id}">
-    {target === 'followup' ? '回答追问' : attempts ? '再答一次原问题' : '你的回答'}
+    {thread.length ? '回复老师' : '你的回答'}
   </label>
   <textarea
     id="stop-input-{stop.id}"
     bind:this={input}
     rows="2"
     maxlength="4000"
-    disabled={waiting || closing}
+    disabled={closing}
     placeholder="公式用 \(…\)"
     value={draft ?? ''}
     oninput={(event) => onDraft(event.currentTarget.value)}

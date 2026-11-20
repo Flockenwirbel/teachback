@@ -116,14 +116,22 @@ export function strugglesFor(course, chapter) {
   const answers = notesOf(course)[chapter.id]?.answers ?? {};
   return Object.entries(answers)
     .filter(([, answer]) => answer.rounds > 1)
-    .map(([stopId, answer]) => ({
-      stopId,
-      rounds: answer.rounds,
-      wrong: (answer.thread ?? [])
-        .filter((turn) => turn.who === 'me' && turn.target === 'main' && !turn.settle)
-        .map((turn) => turn.text),
-      final: answer.text
-    }));
+    .map(([stopId, answer]) => {
+      const thread = answer.thread ?? [];
+      const states = thread.filter((turn) => turn.who === 'teacher' && turn.state).map((turn) => turn.state);
+      return {
+        stopId,
+        rounds: answer.rounds,
+        // Everything the learner wrote on the way, follow-ups included: that is where most of their mistakes are.
+        said: thread
+          .filter((turn) => turn.who === 'me' && !turn.settle && turn.text !== '（不会）')
+          .map((turn) => turn.text),
+        // What the teacher noted as wrong along the way, and where it stood at the end.
+        errors: [...new Set(states.flatMap((state) => state.errors ?? []))],
+        plan: states.at(-1)?.plan ?? '',
+        final: answer.text
+      };
+    });
 }
 
 export function forgetCourse(course) {

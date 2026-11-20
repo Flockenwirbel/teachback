@@ -2,16 +2,20 @@ import { activity, proposeCourse } from './hall.js';
 import { RequestError, readBody, send, serveFile } from './http.js';
 import { chapterPages, library } from './library.js';
 import { createClient, defaultModel } from './openrouter.js';
-import { getChapter, getCourse, listQuestions } from './store.js';
+import { getChapter, getCourse, listQuestions, setStopSolution } from './store.js';
 import { gradeExplanation } from './student/grade.js';
 import { askTeacher } from './teacher/ask.js';
 import { followUp } from './teacher/guide.js';
 
 export { defaultModel };
 
+// Worked solutions for derivation stops are made once per stop, so a stronger model is affordable there.
+const solverModel = 'anthropic/claude-sonnet-5.5';
+
 // /api/courses manages courses and chapters, /api/activity and /api/propose feed the hall's sidebar, /api/coach runs one model turn, /files serves attachments.
-export function apiMiddleware({ key, model = defaultModel, parseModel, fetcher = fetch }) {
+export function apiMiddleware({ key, model = defaultModel, parseModel, solveModel = solverModel, fetcher = fetch }) {
   const client = createClient({ key, model, fetcher });
+  const solver = createClient({ key, model: solveModel, fetcher });
   const reader = createClient({ key, model: parseModel || model, fetcher });
   return async (req, res, next) => {
     const path = req.url?.split('?')[0] ?? '';
@@ -41,7 +45,9 @@ export function apiMiddleware({ key, model = defaultModel, parseModel, fetcher =
       if (!course) throw new RequestError(400, '没有这门课。');
 
       if (body.stage === 'guide') {
-        return send(res, 200, await followUp(client, getChapter(course.slug, body.chapterId)?.segments, body));
+        const chapter = getChapter(course.slug, body.chapterId);
+        const save = (stopId, solution) => setStopSolution(course.slug, body.chapterId, stopId, solution);
+        return send(res, 200, await followUp(client, chapter?.segments, body, { solver, save }));
       }
       const bank = listQuestions(course.slug);
       if (body.stage === 'teacher') {
